@@ -1,4 +1,4 @@
-const CACHE = 'glenc-regiebericht-v1';
+const CACHE = 'glenc-regiebericht-v2';
 const APP_SHELL = ['.', './index.html', './styles.css', './app.js', './manifest.webmanifest', './assets/logo-gmbh.svg', './assets/icon.svg'];
 
 self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(APP_SHELL))));
