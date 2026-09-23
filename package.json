@@ -1,0 +1,9 @@
+{
+  "name": "glenc-regiebericht",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "npx serve .",
+    "test": "node --check app.js"
+  }
+}
