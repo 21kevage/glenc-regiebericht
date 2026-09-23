@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#241e16" />
+    <meta name="description" content="Regieberichte für Glenc Innenausbau GmbH" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="stylesheet" href="styles.css" />
+    <title>Glenc Regiebericht</title>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="app-header">
+        <img src="assets/logo-gmbh.svg" class="brand-logo" alt="Glenc Innenausbau GmbH" />
+        <div>
+          <p class="eyebrow">Glenc Innenausbau GmbH</p>
+          <h1>Regiebericht</h1>
+        </div>
+        <div class="status" aria-live="polite"><span class="status-dot"></span><span id="save-status">Entwurf bereit</span></div>
+      </header>
+
+      <section class="card report-meta" aria-labelledby="report-meta-heading">
+        <h2 id="report-meta-heading">Angaben zum Bericht</h2>
+        <div class="form-grid">
+          <label>Projektname
+            <input id="project-name" type="text" placeholder="z. B. Umbau Praxis Müller" autocomplete="organization" />
+          </label>
+          <label>Datum
+            <input id="report-date" type="date" />
+          </label>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="positions-heading">
+        <div class="section-heading">
+          <div><p class="eyebrow">Leistungsnachweis</p><h2 id="positions-heading">Tätigkeitspositionen</h2></div>
+          <button class="button button-secondary" id="add-position" type="button">+ Position</button>
+        </div>
+        <p class="hint">Tipp: Auf Tablet oder Handy kannst du in das Textfeld auch die Handschrifteingabe deiner Tastatur verwenden.</p>
+        <div id="positions" class="positions"></div>
+        <div class="total-row"><span>Gesamtstunden</span><strong id="total-hours">0,00 Std.</strong></div>
+      </section>
+
+      <section class="card" aria-labelledby="signature-heading">
+        <div class="section-heading compact"><div><p class="eyebrow">Freigabe</p><h2 id="signature-heading">Unterschrift</h2></div><button class="text-button" id="clear-signature" type="button">Unterschrift löschen</button></div>
+        <div class="signature-wrap"><canvas id="signature-pad" aria-label="Unterschriftsfeld"></canvas><span class="signature-line">Dawid Glenc, Glenc Innenausbau GmbH</span></div>
+      </section>
+
+      <div class="action-bar">
+        <button class="button button-secondary" id="new-report" type="button">Neuer Bericht</button>
+        <button class="button button-primary" id="create-pdf" type="button">PDF erstellen</button>
+      </div>
+
+      <section class="history" aria-labelledby="history-heading">
+        <div class="section-heading compact"><div><p class="eyebrow">Auf diesem Gerät</p><h2 id="history-heading">Gespeicherte Entwürfe</h2></div></div>
+        <div id="history-list" class="history-list"></div>
+      </section>
+    </main>
+    <div id="print-root" aria-hidden="true"></div>
+    <template id="position-template">
+      <article class="position">
+        <div class="position-number"></div>
+        <label class="description-label"><span>Tätigkeitsbeschreibung</span><textarea rows="4" placeholder="Tätigkeit beschreiben …"></textarea></label>
+        <label class="hours-label"><span>Stunden</span><input class="hours-input" type="number" inputmode="decimal" min="0" step="0.25" placeholder="0,00" /></label>
+        <button class="remove-position" type="button" aria-label="Position entfernen">×</button>
+      </article>
+    </template>
+    <script src="app.js"></script>
+  </body>
+</html>
