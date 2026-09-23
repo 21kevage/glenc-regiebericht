@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 510" role="img" aria-label="Glenc Innenausbau GmbH">
+  <g transform="translate(35 45)">
+    <path d="M0 170 165 25l165 145v225H0Z" fill="#d9a21a"/>
+    <path d="M46 184h238v163H46z" fill="#241e16"/>
+    <path d="M125 347v-91h82v91M87 232h54v54H87zm102 0h54v54h-54z" fill="#f6f2ea"/>
+    <path d="M-10 174 165 20l175 154" fill="none" stroke="#d9a21a" stroke-linecap="round" stroke-linejoin="round" stroke-width="29"/>
+  </g>
+  <text x="420" y="228" font-family="Arial, Helvetica, sans-serif" font-size="120" font-weight="800" letter-spacing="3" fill="#241e16">GLENC</text>
+  <text x="423" y="330" font-family="Arial, Helvetica, sans-serif" font-size="73" font-weight="800" letter-spacing="3" fill="#241e16">INNENAUSBAU</text>
+  <text x="1240" y="397" text-anchor="end" font-family="Arial, Helvetica, sans-serif" font-size="35" font-weight="700" letter-spacing="5" fill="#c89014">GMBH</text>
+</svg>
