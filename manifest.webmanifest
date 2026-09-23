@@ -1,0 +1,10 @@
+{
+  "name": "Glenc Regiebericht",
+  "short_name": "Regiebericht",
+  "description": "Regieberichte für Glenc Innenausbau GmbH",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f6f2ea",
+  "theme_color": "#241e16",
+  "icons": [{ "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
