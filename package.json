@@ -9,7 +9,7 @@
     "start": "npx serve .",
     "test": "node --check app.js && node --check electron/main.cjs",
     "desktop": "electron .",
-    "dist:win": "electron-builder --win nsis --x64"
+    "dist:win": "electron-builder --win nsis --x64 --publish never"
   },
   "devDependencies": {
     "electron": "^37.1.0",
