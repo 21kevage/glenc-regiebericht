@@ -1,9 +1,48 @@
 {
   "name": "glenc-regiebericht",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "Regieberichte für Glenc Innenausbau GmbH",
   "private": true,
+  "main": "electron/main.cjs",
+  "author": "Glenc Innenausbau GmbH",
   "scripts": {
     "start": "npx serve .",
-    "test": "node --check app.js"
+    "test": "node --check app.js && node --check electron/main.cjs",
+    "desktop": "electron .",
+    "dist:win": "electron-builder --win nsis --x64"
+  },
+  "devDependencies": {
+    "electron": "^37.1.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "de.glencinnenausbau.regiebericht",
+    "productName": "Glenc Regiebericht",
+    "files": [
+      "index.html",
+      "styles.css",
+      "app.js",
+      "manifest.webmanifest",
+      "assets/**/*",
+      "electron/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "Glenc-Regiebericht-Setup-${version}.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Glenc Regiebericht"
+    }
   }
 }
