@@ -114,4 +114,4 @@ $('#create-pdf').addEventListener('click', printReport);
 [projectEl, dateEl].forEach(control => control.addEventListener('input', saveCurrent));
 dateEl.value = localDate(); resizeCanvas(false); addPosition();
 const current = getStore().current; if (current) loadReport(current); renderHistory();
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').then(registration => registration.update()));
+if ('serviceWorker' in navigator && location.protocol === 'https:') window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').then(registration => registration.update()));
