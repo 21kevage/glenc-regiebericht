@@ -9,9 +9,12 @@
     "start": "npx serve .",
     "test": "node --check app.js && node --check electron/main.cjs",
     "desktop": "electron .",
-    "dist:win": "electron-builder --win nsis --x64 --publish never"
+    "dist:win": "electron-builder --win nsis --x64 --publish never",
+    "android:sync": "node scripts/prepare-android.mjs && cap sync android",
+    "android:apk": "npm run android:sync && cd android && ./gradlew assembleDebug"
   },
   "devDependencies": {
+    "@capacitor/cli": "^7.6.9",
     "electron": "^44.7.0",
     "electron-builder": "^26.0.12"
   },
@@ -44,5 +47,9 @@
       "createStartMenuShortcut": true,
       "shortcutName": "Glenc Regiebericht"
     }
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.6.9",
+    "@capacitor/core": "^7.6.9"
   }
 }
