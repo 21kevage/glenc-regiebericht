@@ -50,6 +50,6 @@
   },
   "dependencies": {
     "@capacitor/android": "^7.6.9",
-    "@capacitor/core": "^7.6.9"
+    "@capacitor/core": "^8.5.3"
   }
 }
