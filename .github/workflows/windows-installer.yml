@@ -11,6 +11,9 @@ on:
       - 'app.js'
       - 'index.html'
       - 'styles.css'
+      - 'sw.js'
+      - 'manifest.webmanifest'
+      - 'package-lock.json'
       - '.github/workflows/windows-installer.yml'
 
 permissions:
@@ -25,7 +28,11 @@ jobs:
         with:
           node-version: 20
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
+      - name: Check dependency vulnerabilities
+        run: npm audit --audit-level=high
+      - name: Check application syntax
+        run: npm test
       - name: Build installer
         run: npm run dist:win
       - name: Upload installer

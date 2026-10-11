@@ -50,5 +50,27 @@ input:focus,textarea:focus { border-color:var(--gold); box-shadow:0 0 0 3px rgba
 .load-button { border:1px solid var(--line); padding:7px 10px; border-radius:7px; color:var(--ink); background:#fff; font-size:.8rem; font-weight:700; }
 .empty-history { margin:6px 0; color:var(--muted); font-size:.86rem; }
 #print-root { display:none; }
+
+@page { size:A4; margin:16mm; }
+.pdf-page { color:#211b14; font-family:Arial,sans-serif; font-size:10.5pt; }
+.pdf-head { display:flex; justify-content:space-between; align-items:start; border-bottom:3px solid #c89014; padding-bottom:10mm; }
+.pdf-logo { width:76mm; height:25mm; object-fit:contain; object-position:left top; }
+.pdf-company { text-align:right; font-size:8.2pt; color:#5e574f; line-height:1.5; }
+.pdf-company strong { color:#211b14; font-size:9.5pt; }
+.pdf-document-type { margin:8mm 0 1.5mm; color:#a8750b; font-size:7.8pt; font-weight:700; letter-spacing:.16em; }
+.pdf-title { margin:0 0 7mm; font:700 23pt Georgia,serif; letter-spacing:-.02em; }
+.pdf-meta { display:grid; grid-template-columns:1fr 1fr; gap:5mm; margin-bottom:9mm; padding:5mm; background:#f6f2ea; }
+.pdf-meta b { display:block; margin-bottom:1.5mm; font-size:8pt; text-transform:uppercase; letter-spacing:.08em; color:#665f57; }
+.pdf-table { width:100%; border-collapse:collapse; }
+.pdf-table th { padding:3mm; background:#241e16; color:#fff; text-align:left; font-size:8.5pt; }
+.pdf-table td { padding:4mm 3mm; border-bottom:1px solid #d9d1c4; vertical-align:top; }
+.pdf-table th:first-child,.pdf-table td:first-child { width:11mm; text-align:center; }
+.pdf-table th:last-child,.pdf-table td:last-child { width:28mm; text-align:right; }
+.pdf-total { display:flex; justify-content:flex-end; gap:20mm; margin-top:7mm; padding:4mm 0; border-top:2px solid #241e16; font-size:12pt; }
+.pdf-sign-block { margin-top:24mm; width:72mm; }
+.pdf-sign-box { height:28mm; border-bottom:1px solid #756d63; display:flex; align-items:end; }
+.pdf-signature { width:68mm; max-height:27mm; object-fit:contain; object-position:left bottom; }
+.signature-placeholder { font-size:8pt; color:#80786e; margin-bottom:3mm; }
+.pdf-footer { position:fixed; bottom:0; width:100%; padding-top:4mm; border-top:1px solid #d9d1c4; color:#665f57; font-size:7.5pt; display:flex; justify-content:space-between; }
 @media (max-width:640px) { .app-shell { padding:20px 14px 34px; }.app-header { grid-template-columns:1fr auto; gap:13px; }.brand-logo { grid-column:1/-1; width:210px; height:55px; }.status { font-size:.75rem; }.card { padding:18px 15px; border-radius:13px; }.form-grid { grid-template-columns:1fr; }.position { grid-template-columns:22px minmax(0,1fr) 76px 23px; padding:10px; gap:7px; }.position-number { margin-top:27px; }.hours-label input { padding-inline:7px; }.remove-position { margin-top:25px; }.action-bar { justify-content:stretch; }.action-bar .button { flex:1; }.section-heading { align-items:center; } }
 @media print { body > *:not(#print-root) { display:none !important; } #print-root { display:block !important; } }

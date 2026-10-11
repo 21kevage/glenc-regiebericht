@@ -16,7 +16,9 @@ self.addEventListener('activate', event => event.waitUntil(
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
-  const path = new URL(event.request.url).pathname.split('/').pop();
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) return;
+  const path = url.pathname.split('/').pop();
   if (NETWORK_FIRST.has(path)) {
     event.respondWith(fetch(event.request).then(response => {
       const copy = response.clone();
@@ -29,5 +31,5 @@ self.addEventListener('fetch', event => {
     const copy = response.clone();
     caches.open(CACHE).then(cache => cache.put(event.request, copy));
     return response;
-  }).catch(() => caches.match('./index.html'))));
+  }).catch(() => event.request.mode === 'navigate' ? caches.match('./index.html') : Response.error())));
 });

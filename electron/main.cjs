@@ -2,6 +2,7 @@ const { app, BrowserWindow } = require('electron');
 const path = require('path');
 
 function createWindow() {
+  const startUrl = `file://${path.join(__dirname, '..', 'index.html')}`;
   const window = new BrowserWindow({
     width: 1180,
     height: 860,
@@ -16,6 +17,13 @@ function createWindow() {
       sandbox: true
     }
   });
+
+  window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  window.webContents.on('will-navigate', (event, url) => {
+    if (url !== startUrl) event.preventDefault();
+  });
+  window.webContents.on('will-attach-webview', event => event.preventDefault());
+  window.webContents.session.setPermissionRequestHandler((_webContents, _permission, callback) => callback(false));
 
   window.loadFile(path.join(__dirname, '..', 'index.html'));
 }
