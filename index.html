@@ -34,6 +34,23 @@
         </div>
       </section>
 
+      <section class="card" aria-labelledby="employees-heading">
+        <div class="section-heading">
+          <div><p class="eyebrow">Team</p><h2 id="employees-heading">Mitarbeiter im Bericht</h2></div>
+        </div>
+        <p class="hint">Mitarbeiter auswählen und anschließend den jeweiligen Tätigkeitspositionen mit ihren Stunden zuordnen.</p>
+        <div id="report-employees" class="report-employees"></div>
+        <details class="employee-manager">
+          <summary>Mitarbeiter verwalten</summary>
+          <div class="employee-form">
+            <label>Name<input id="employee-name" type="text" maxlength="100" placeholder="Vor- und Nachname" autocomplete="name" /></label>
+            <label>Rolle<select id="employee-role"><option value="Facharbeiter">Facharbeiter</option><option value="Helfer">Helfer</option></select></label>
+            <button class="button button-secondary" id="add-employee" type="button">Mitarbeiter anlegen</button>
+          </div>
+          <div id="employee-master-list" class="employee-master-list"></div>
+        </details>
+      </section>
+
       <section class="card" aria-labelledby="positions-heading">
         <div class="section-heading">
           <div><p class="eyebrow">Leistungsnachweis</p><h2 id="positions-heading">Tätigkeitspositionen</h2></div>
@@ -63,10 +80,21 @@
     <template id="position-template">
       <article class="position">
         <div class="position-number"></div>
-        <label class="description-label"><span>Tätigkeitsbeschreibung</span><textarea rows="4" maxlength="2000" placeholder="Tätigkeit beschreiben …"></textarea></label>
-        <label class="hours-label"><span>Stunden</span><input class="hours-input" type="number" inputmode="decimal" min="0" max="24" step="0.25" placeholder="0,00" /></label>
+        <div class="position-content">
+          <label class="description-label"><span>Tätigkeitsbeschreibung</span><textarea rows="4" maxlength="2000" placeholder="Tätigkeit beschreiben …"></textarea></label>
+          <div class="assignment-heading"><span>Mitarbeitereinsatz</span><button class="add-assignment" type="button">+ Mitarbeiter</button></div>
+          <div class="assignments"></div>
+          <div class="position-total"><span>Positionsstunden</span><strong>0,00 Std.</strong></div>
+        </div>
         <button class="remove-position" type="button" aria-label="Position entfernen">×</button>
       </article>
+    </template>
+    <template id="assignment-template">
+      <div class="assignment-row">
+        <select class="assignment-employee" aria-label="Mitarbeiter auswählen"></select>
+        <input class="assignment-hours" type="number" inputmode="decimal" min="0" max="24" step="0.25" placeholder="Stunden" aria-label="Stunden" />
+        <button class="remove-assignment" type="button" aria-label="Mitarbeitereinsatz entfernen">×</button>
+      </div>
     </template>
     <script src="app.js"></script>
   </body>
