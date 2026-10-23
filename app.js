@@ -35,6 +35,11 @@ function formatHours(value) { return parseHours(value).toLocaleString('de-DE', {
 function escapeHtml(value = '') { return String(value).replace(/[&<>'"]/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char])); }
 function clampText(value, maxLength) { return String(value || '').slice(0, maxLength); }
 function validSignature(value) { return typeof value === 'string' && value.length <= 2_000_000 && /^data:image\/png;base64,[A-Za-z0-9+/]+={0,2}$/.test(value) ? value : ''; }
+function safeFilePart(value) { return String(value || 'Projekt').replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '').slice(0, 80) || 'Projekt'; }
+function showStatus(message, duration = 3600) {
+  statusEl.textContent = message;
+  if (duration) window.setTimeout(() => { if (statusEl.textContent === message) statusEl.textContent = 'Entwurf bereit'; }, duration);
+}
 function normalizeEmployee(value) {
   const name = clampText(value?.name, 100).trim();
   if (!name) return null;
@@ -408,37 +413,243 @@ function newReport() {
   renderHistory();
 }
 
-async function printReport() {
+function pdfLine(pdf, x, y, width, label, value) {
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(7.5);
+  pdf.setTextColor(102, 95, 87);
+  pdf.text(label.toUpperCase(), x, y);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(10);
+  pdf.setTextColor(33, 27, 20);
+  const lines = pdf.splitTextToSize(value || '–', width);
+  pdf.text(lines, x, y + 5);
+  return lines.length * 4.4 + 8;
+}
+
+async function assetAsDataUrl(path) {
+  const response = await fetch(path);
+  if (!response.ok) throw new Error(`Asset konnte nicht geladen werden: ${path}`);
+  const blob = await response.blob();
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function blobAsBase64(blob) {
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let index = 0; index < bytes.length; index += chunkSize) binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
+  return btoa(binary);
+}
+
+function downloadPdf(blob, fileName) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  link.style.display = 'none';
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function isNativeApp() {
+  return Boolean(window.Capacitor?.isNativePlatform?.());
+}
+
+async function saveNativePdf(blob, fileName) {
+  const filesystem = window.Capacitor?.Plugins?.Filesystem;
+  const share = window.Capacitor?.Plugins?.Share;
+  if (!filesystem?.writeFile || !share?.share) throw new Error('Die Android-Speicherfunktion ist in dieser APK nicht verfügbar.');
+  showStatus('PDF wird gespeichert …', 0);
+  const result = await filesystem.writeFile({
+    path: fileName,
+    data: await blobAsBase64(blob),
+    directory: 'CACHE',
+    recursive: false
+  });
+  await share.share({
+    title: 'Glenc Regiebericht',
+    text: fileName,
+    files: [result.uri],
+    dialogTitle: 'Regiebericht speichern oder teilen'
+  });
+  showStatus('PDF erstellt – Ziel auswählen', 4600);
+}
+
+async function createPdf() {
   const data = reportData();
   if (!data.project) { projectEl.focus(); alert('Bitte zuerst den Projektnamen eintragen.'); return; }
   const meaningful = data.positions.filter(isMeaningful);
   if (!meaningful.length) { alert('Bitte mindestens eine Tätigkeitsposition eintragen.'); return; }
   const missingAssignments = meaningful.some(position => position.description && !position.assignments.length && !position.legacyHours);
   if (missingAssignments) { alert('Bitte jeder Tätigkeitsposition mindestens einen Mitarbeiter mit Stunden zuordnen.'); return; }
-  const rows = meaningful.map((position, index) => {
-    const assigned = position.assignments.length
-      ? position.assignments.map(assignment => `<span class="pdf-assignment"><strong>${escapeHtml(assignment.name)}</strong> · ${escapeHtml(assignment.role)} · ${formatHours(assignment.hours)} Std.</span>`).join('')
-      : '<span class="pdf-assignment">Nicht zugeordnet</span>';
-    return `<tr><td>${index + 1}</td><td>${escapeHtml(position.description).replace(/\n/g, '<br>')}</td><td>${assigned}</td><td>${formatHours(employeeHours(position))}</td></tr>`;
-  }).join('');
-  const employees = data.employees.length ? data.employees.map(employee => `${escapeHtml(employee.name)} (${escapeHtml(employee.role)})`).join(' · ') : 'Keine Mitarbeiter ausgewählt';
-  const signature = data.signature ? `<img class="pdf-signature" src="${data.signature}" alt="Unterschrift Dawid Glenc">` : '<span class="signature-placeholder">Nicht unterschrieben</span>';
-  $('#print-root').innerHTML = `<section class="pdf-page"><header class="pdf-head"><img class="pdf-logo" src="${new URL('assets/logo.png', document.baseURI).href}" alt="Glenc Innenausbau GmbH"><div class="pdf-company"><strong>${COMPANY.name}</strong><br>${COMPANY.address}<br>${COMPANY.phone}<br>${COMPANY.email}<br>USt-IdNr. ${COMPANY.vat}</div></header><p class="pdf-document-type">Leistungsnachweis</p><h1 class="pdf-title">Regiebericht</h1><div class="pdf-meta"><div><b>Projekt</b>${escapeHtml(data.project)}</div><div><b>Datum</b>${formatDate(data.date)}</div></div><div class="pdf-employees"><b>Mitarbeiter im Bericht</b>${employees}</div><table class="pdf-table"><thead><tr><th>Pos.</th><th>Tätigkeitsbeschreibung</th><th>Mitarbeitereinsatz</th><th>Stunden</th></tr></thead><tbody>${rows}</tbody></table><div class="pdf-total"><span>Gesamtstunden</span><strong>${formatHours(totalHours(meaningful))} Std.</strong></div><div class="pdf-sign-block"><div class="pdf-sign-box">${signature}</div><small>Unterschrift Dawid Glenc</small></div><footer class="pdf-footer"><span>${COMPANY.name}</span><span>Regiebericht · ${escapeHtml(data.project)}</span></footer></section>`;
-  const logo = $('#print-root .pdf-logo');
-  if (!logo.complete || !logo.naturalWidth) await new Promise(resolve => { logo.addEventListener('load', resolve, { once: true }); logo.addEventListener('error', resolve, { once: true }); });
-  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-  const oldTitle = document.title;
-  const safeProject = data.project.replace(/[^a-z0-9]+/gi, '_').slice(0, 80) || 'Projekt';
-  document.title = `Regiebericht_${safeProject}_${data.date || localDate()}`;
-  window.print();
-  document.title = oldTitle;
+  const button = $('#create-pdf');
+  button.disabled = true;
+  const originalLabel = button.textContent;
+  button.textContent = 'PDF wird erstellt …';
+  try {
+    const jsPDF = window.jspdf?.jsPDF;
+    if (!jsPDF) throw new Error('Die PDF-Bibliothek konnte nicht geladen werden.');
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const margin = 14;
+    const contentWidth = pageWidth - margin * 2;
+    let y = 15;
+    const logoData = await assetAsDataUrl('assets/logo.png');
+    pdf.addImage(logoData, 'PNG', margin, y, 67, 22);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(10);
+    pdf.setTextColor(33, 27, 20);
+    pdf.text(COMPANY.name, pageWidth - margin, y + 3, { align: 'right' });
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(7.5);
+    pdf.setTextColor(94, 87, 79);
+    [COMPANY.address, COMPANY.phone, COMPANY.email, `USt-IdNr. ${COMPANY.vat}`].forEach((line, index) => pdf.text(line, pageWidth - margin, y + 8 + index * 4, { align: 'right' }));
+    y += 28;
+    pdf.setDrawColor(200, 144, 20);
+    pdf.setLineWidth(0.9);
+    pdf.line(margin, y, pageWidth - margin, y);
+    y += 8;
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(7.5);
+    pdf.setTextColor(168, 117, 11);
+    pdf.text('LEISTUNGSNACHWEIS', margin, y);
+    y += 8;
+    pdf.setFont('times', 'bold');
+    pdf.setFontSize(22);
+    pdf.setTextColor(33, 27, 20);
+    pdf.text('Regiebericht', margin, y);
+    y += 9;
+    pdf.setFillColor(246, 242, 234);
+    pdf.rect(margin, y, contentWidth, 22, 'F');
+    const projectHeight = pdfLine(pdf, margin + 5, y + 5, 83, 'Projekt', data.project);
+    const dateHeight = pdfLine(pdf, margin + 102, y + 5, 75, 'Datum', formatDate(data.date));
+    y += Math.max(22, projectHeight + 4, dateHeight + 4) + 7;
+    const employeeText = data.employees.length ? data.employees.map(employee => `${employee.name} (${employee.role})`).join(' · ') : 'Keine Mitarbeiter ausgewählt';
+    pdf.setFillColor(250, 247, 240);
+    const employeeLines = pdf.splitTextToSize(employeeText, contentWidth - 10);
+    const employeeHeight = Math.max(13, employeeLines.length * 4.5 + 10);
+    pdf.rect(margin, y, contentWidth, employeeHeight, 'F');
+    pdf.setDrawColor(200, 144, 20);
+    pdf.setLineWidth(0.8);
+    pdf.line(margin, y, margin, y + employeeHeight);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(7.5);
+    pdf.setTextColor(102, 95, 87);
+    pdf.text('MITARBEITER IM BERICHT', margin + 5, y + 5);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(9);
+    pdf.setTextColor(33, 27, 20);
+    pdf.text(employeeLines, margin + 5, y + 10);
+    y += employeeHeight + 7;
+
+    const drawTableHeader = () => {
+      pdf.setFillColor(36, 30, 22);
+      pdf.rect(margin, y, contentWidth, 8, 'F');
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(7.5);
+      pdf.setTextColor(255, 255, 255);
+      pdf.text('POS.', margin + 3, y + 5);
+      pdf.text('TÄTIGKEITSBESCHREIBUNG', margin + 15, y + 5);
+      pdf.text('MITARBEITEREINSATZ', margin + 92, y + 5);
+      pdf.text('STD.', pageWidth - margin - 3, y + 5, { align: 'right' });
+      y += 8;
+    };
+    drawTableHeader();
+    meaningful.forEach((position, index) => {
+      const description = pdf.splitTextToSize(position.description || '–', 70);
+      const assignmentText = position.assignments.length
+        ? position.assignments.map(assignment => `${assignment.name} · ${assignment.role} · ${formatHours(assignment.hours)} Std.`)
+        : ['Nicht zugeordnet'];
+      const assignments = assignmentText.flatMap(item => pdf.splitTextToSize(item, 64));
+      const rowHeight = Math.max(12, description.length * 4.2 + 6, assignments.length * 4.2 + 6);
+      if (y + rowHeight > pageHeight - 30) {
+        pdf.addPage();
+        y = 18;
+        drawTableHeader();
+      }
+      pdf.setDrawColor(217, 209, 196);
+      pdf.setLineWidth(0.2);
+      pdf.line(margin, y + rowHeight, pageWidth - margin, y + rowHeight);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(8);
+      pdf.setTextColor(33, 27, 20);
+      pdf.text(String(index + 1), margin + 5, y + 6, { align: 'center' });
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(8.3);
+      pdf.text(description, margin + 15, y + 6);
+      pdf.setFontSize(7.7);
+      pdf.text(assignments, margin + 92, y + 6);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(8.5);
+      pdf.text(`${formatHours(employeeHours(position))}`, pageWidth - margin - 3, y + 6, { align: 'right' });
+      y += rowHeight;
+    });
+    if (y + 50 > pageHeight - 18) { pdf.addPage(); y = 18; }
+    y += 8;
+    pdf.setDrawColor(36, 30, 22);
+    pdf.setLineWidth(0.6);
+    pdf.line(margin, y, pageWidth - margin, y);
+    y += 7;
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(11);
+    pdf.setTextColor(33, 27, 20);
+    pdf.text('Gesamtstunden', pageWidth - margin - 42, y);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(12);
+    pdf.text(`${formatHours(totalHours(meaningful))} Std.`, pageWidth - margin, y, { align: 'right' });
+    y += 21;
+    pdf.setDrawColor(117, 109, 99);
+    pdf.setLineWidth(0.25);
+    pdf.line(margin, y + 22, margin + 68, y + 22);
+    if (data.signature) {
+      try { pdf.addImage(data.signature, 'PNG', margin, y, 64, 20); } catch { /* A corrupt legacy signature must not prevent PDF creation. */ }
+    }
+    pdf.setFont('helvetica', 'normal');
+    pdf.setFontSize(7.5);
+    pdf.setTextColor(94, 87, 79);
+    pdf.text('Unterschrift Dawid Glenc', margin, y + 27);
+    const pageCount = pdf.getNumberOfPages();
+    for (let page = 1; page <= pageCount; page += 1) {
+      pdf.setPage(page);
+      pdf.setDrawColor(217, 209, 196);
+      pdf.setLineWidth(0.2);
+      pdf.line(margin, pageHeight - 13, pageWidth - margin, pageHeight - 13);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(7.2);
+      pdf.setTextColor(102, 95, 87);
+      pdf.text(COMPANY.name, margin, pageHeight - 8);
+      pdf.text(`Regiebericht · ${data.project}`, pageWidth - margin, pageHeight - 8, { align: 'right' });
+    }
+    const blob = pdf.output('blob');
+    const fileName = `Regiebericht_${safeFilePart(data.project)}_${data.date || localDate()}.pdf`;
+    if (isNativeApp()) await saveNativePdf(blob, fileName);
+    else {
+      downloadPdf(blob, fileName);
+      showStatus('PDF wurde heruntergeladen');
+    }
+  } catch (error) {
+    console.error('PDF export failed', error);
+    showStatus('PDF-Erstellung fehlgeschlagen', 5200);
+    alert(`Die PDF konnte nicht erstellt werden. ${error?.message || 'Bitte erneut versuchen.'}`);
+  } finally {
+    button.disabled = false;
+    button.textContent = originalLabel;
+  }
 }
 
 $('#add-position').addEventListener('click', () => { addPosition(); positionsEl.lastElementChild.querySelector('textarea').focus(); });
 $('#add-employee').addEventListener('click', addEmployee);
 employeeNameEl.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); addEmployee(); } });
 $('#new-report').addEventListener('click', newReport);
-$('#create-pdf').addEventListener('click', printReport);
+$('#create-pdf').addEventListener('click', createPdf);
 [projectEl, dateEl].forEach(control => control.addEventListener('input', saveCurrent));
 dateEl.value = localDate();
 resizeCanvas(false);

@@ -8,6 +8,7 @@
   "scripts": {
     "start": "npx serve .",
     "test": "node --check app.js && node --check electron/main.cjs",
+    "web:build": "node scripts/prepare-web.mjs",
     "desktop": "electron .",
     "dist:win": "electron-builder --win nsis --x64 --publish never",
     "android:sync": "node scripts/prepare-android.mjs && cap sync android",
@@ -50,6 +51,9 @@
   },
   "dependencies": {
     "@capacitor/android": "^7.6.9",
-    "@capacitor/core": "^7.6.9"
+    "@capacitor/core": "^7.6.9",
+    "@capacitor/filesystem": "7.1.9",
+    "@capacitor/share": "7.0.4",
+    "jspdf": "4.2.1"
   }
 }

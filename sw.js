@@ -1,5 +1,5 @@
-const CACHE = 'glenc-regiebericht-v5';
-const APP_SHELL = ['.', './index.html', './styles.css', './app.js', './manifest.webmanifest', './assets/logo.png', './assets/icon.svg'];
+const CACHE = 'glenc-regiebericht-v8';
+const APP_SHELL = ['.', './index.html', './styles.css', './app.js', './capacitor.js', './capacitor-plugin-bridge.js', './vendor/synapse.js', './vendor/capacitor-filesystem.js', './vendor/capacitor-share.js', './vendor/jspdf.umd.min.js', './manifest.webmanifest', './assets/logo.png', './assets/icon.svg'];
 const NETWORK_FIRST = new Set(['', 'index.html', 'app.js', 'styles.css', 'sw.js']);
 
 self.addEventListener('install', event => event.waitUntil(

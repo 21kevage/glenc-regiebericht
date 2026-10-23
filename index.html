@@ -68,7 +68,7 @@
 
       <div class="action-bar">
         <button class="button button-secondary" id="new-report" type="button">Neuer Bericht</button>
-        <button class="button button-primary" id="create-pdf" type="button">PDF erstellen</button>
+        <button class="button button-primary" id="create-pdf" type="button">PDF erstellen &amp; speichern</button>
       </div>
 
       <section class="history" aria-labelledby="history-heading">
@@ -96,6 +96,12 @@
         <button class="remove-assignment" type="button" aria-label="Mitarbeitereinsatz entfernen">×</button>
       </div>
     </template>
+    <script src="capacitor.js"></script>
+    <script src="vendor/synapse.js"></script>
+    <script src="capacitor-plugin-bridge.js"></script>
+    <script src="vendor/capacitor-filesystem.js"></script>
+    <script src="vendor/capacitor-share.js"></script>
+    <script src="vendor/jspdf.umd.min.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
